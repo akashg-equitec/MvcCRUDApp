@@ -7,7 +7,19 @@
 <div class="d-flex align-items-center justify-content-center h-100">
     <div class="w-50">
         <h2 class="text-center my-4 text-primary">Add New Student</h2>
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["SuccessMessage"]
+            </div>
+        }
 
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["ErrorMessage"]
+            </div>
+        }
         @using (Html.BeginForm())
         {
             @Html.AntiForgeryToken()
@@ -45,7 +57,7 @@
                             ViewBag.dept != null
                                 ? new SelectList(ViewBag.dept, "DepartmentId", "DepartmentName")
                                 : new SelectList(Enumerable.Empty<SelectListItem>(), "Value", "Text"),
-                            "Select Department",    
+                            "Select Department",
                             new { @class = "form-control" }
                         )
                         @Html.ValidationMessageFor(model => model.DepartmentId, "", new { @class = "text-danger" })

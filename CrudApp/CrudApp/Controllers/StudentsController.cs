@@ -19,7 +19,7 @@ namespace CrudApp.Controllers
     
 
 
-    
+        
         public ActionResult Show(int page = 1)
         {
             int pageSize = 5;
@@ -33,29 +33,64 @@ namespace CrudApp.Controllers
             ViewBag.TotalPages = totalPages;
             return View(Employees);
         }
-    
 
-        
+
+
 
 
         //Insert new data
+        //public ActionResult Create()
+        //{
+        //    using (var con = new SqlConnection(dapObj.conn))
+        //    {
+        //        con.Open();
+        //        string sql = "select * from Departments";
+        //        var temp = con.Query<StudentModel>(sql);
+        //        ViewBag.dept = temp;
+
+        //    }
+        //    return View();
+        //}
+        //[HttpPost]
+        //public ActionResult Create(StudentModel std)
+        //{
+        //    dapObj.InsertStudent(std);
+        //    return RedirectToAction("Show");
+        //}
+
+   
         public ActionResult Create()
         {
             using (var con = new SqlConnection(dapObj.conn))
             {
                 con.Open();
-                string sql = "select * from Departments";
+                string sql = "SELECT * FROM Departments";
                 var temp = con.Query<StudentModel>(sql);
                 ViewBag.dept = temp;
-
             }
             return View();
         }
         [HttpPost]
         public ActionResult Create(StudentModel std)
         {
-            dapObj.InsertStudent(std);
-            return RedirectToAction("Show");
+            try
+            {
+                dapObj.InsertStudent(std);
+                TempData["SuccessMessage"] = "Student added successfully!";
+                return RedirectToAction("Show");
+            }
+            catch (Exception ex)
+            { 
+                TempData["ErrorMessage"] = ex.Message;
+                using (var con = new SqlConnection(dapObj.conn))
+                {
+                    con.Open();
+                    string sql = "SELECT * FROM Departments";
+                    var temp = con.Query<StudentModel>(sql);
+                    ViewBag.dept = temp;
+                }
+                return View(std);
+            }
         }
 
 
@@ -64,39 +99,7 @@ namespace CrudApp.Controllers
 
 
 
-
-        //update one data
-        //public ActionResult Update(int StudentId)
-        //{
-        //    using (var con = new SqlConnection(dapObj.conn))
-        //    {
-        //        con.Open();
-        //        string departmentSql = "SELECT d.DepartmentName as s.DepartmentId from Students s inner join Departments d on s.DepartmentId = d.DepartmentId  where s.StudentId=@StudentId";
-        //        var departments = con.Query<StudentModel>(departmentSql); // Query the correct DepartmentModel
-        //        ViewBag.dept = departments;
-
-        //        string studentSql = @"select s.Name, s.RollNo, s.DateOfBirth, s.Gender, s.Address, s.PhoneNumber, 
-        //            d.DepartmentName AS Department from Students s inner join Departments d on s.DepartmentId = d.DepartmentId 
-        //            where s.StudentId=@StudentId";
-        //        var student = con.QueryFirstOrDefault<StudentModel>(studentSql, new { StudentId = StudentId });
-
-        //        if (student == null)
-        //        {
-        //            return HttpNotFound(); 
-        //        }
-        //        return View(student); 
-        //    }
-        //}
-
-        //[HttpPost]
-        //public ActionResult Update(StudentModel std)
-        //{ 
-        //    dapObj.updateData(std);
-        //    return RedirectToAction("Show");    
-        //}
-
-
-
+        // update code
         public ActionResult Update(int? StudentId)
         {
             if (!StudentId.HasValue)
@@ -108,7 +111,7 @@ namespace CrudApp.Controllers
             {
                 con.Open();
                 string departmentSql = @"SELECT DepartmentId, DepartmentName FROM Departments";
-                var departments = con.Query<StudentModel>(departmentSql); // Correct model
+                var departments = con.Query<StudentModel>(departmentSql); 
                 ViewBag.dept = departments;
 
 

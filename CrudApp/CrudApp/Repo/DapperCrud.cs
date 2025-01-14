@@ -32,24 +32,43 @@ namespace CrudApp.Repo
                 return con.Query<StudentModel>(sql).ToList();
             }
         }
-       
+
 
 
 
         //insert new data
+        //public void InsertStudent(StudentModel obj)
+        //{
+        //    using (var con = new SqlConnection(conn))
+        //    {
+        //        con.Open();
+        //        string sql = @"
+        //            insert into Students (Name, RollNo, DepartmentId, DateOfBirth, Gender, Address, PhoneNumber)
+        //          values (@Name, @RollNo, @DepartmentId, @DateOfBirth, @Gender, @Address, @PhoneNumber)";
+        //        con.Execute(sql, obj);
+
+        //    }
+        //}
+
         public void InsertStudent(StudentModel obj)
         {
             using (var con = new SqlConnection(conn))
             {
                 con.Open();
-                string sql = @"
-                    insert into Students (Name, RollNo, DepartmentId, DateOfBirth, Gender, Address, PhoneNumber)
-                  values (@Name, @RollNo, @DepartmentId, @DateOfBirth, @Gender, @Address, @PhoneNumber)";
-                con.Execute(sql, obj);
+                string checkSql = "SELECT COUNT(*) FROM Students WHERE RollNo = @RollNo";
+                int existingCount = con.ExecuteScalar<int>(checkSql, new { obj.RollNo });
 
+                if (existingCount > 0)
+                {
+                    throw new Exception("Roll number already exists in the database.");
+                }
+
+                string insertSql = @"
+                    INSERT INTO Students (Name, RollNo, DepartmentId, DateOfBirth, Gender, Address, PhoneNumber)
+                    VALUES (@Name, @RollNo, @DepartmentId, @DateOfBirth, @Gender, @Address, @PhoneNumber)";
+                con.Execute(insertSql, obj);
             }
         }
-
 
 
 
