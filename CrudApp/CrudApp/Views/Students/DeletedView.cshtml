@@ -1,0 +1,128 @@
+﻿@model IEnumerable<CrudApp.Models.StudentModel>
+
+@{
+    ViewBag.Title = "DeletedView";
+
+
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+
+
+}
+
+
+<h2 class="text-center my-4 text-primary">Deleted Students</h2>
+<div class="d-flex justify-content-between mb-3">
+    <div>
+        <button id="printButton" class="btn btn-warning me-2">Print</button>
+        <button id="exportButton" class="btn btn-success">Download Excel</button>
+        <p>@Html.ActionLink("Back to List", "Show")</p>
+    </div>
+</div>
+
+<table id="deletedStudentsTable" class="table table-bordered table-striped shadow-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>SRno.</th>
+            <th>@Html.DisplayNameFor(model => model.StudentId)</th>
+            <th>@Html.DisplayNameFor(model => model.Name)</th>
+            <th>@Html.DisplayNameFor(model => model.RollNo)</th>
+            <th>@Html.DisplayNameFor(model => model.Department)</th>
+            <th>Age</th>
+            <th>@Html.DisplayNameFor(model => model.Gender)</th>
+            <th>@Html.DisplayNameFor(model => model.Address)</th>
+            <th>@Html.DisplayNameFor(model => model.PhoneNumber)</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@ViewBag.c</td>
+                <td>@Html.DisplayFor(modelItem => item.StudentId)</td>
+                <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                <td>@Html.DisplayFor(modelItem => item.RollNo)</td>
+                <td>@Html.DisplayFor(modelItem => item.Department)</td>
+                <td>@(DateTime.Now.Subtract(item.DateOfBirth).Days / 365)</td>
+                <td>@Html.DisplayFor(modelItem => item.Gender)</td>
+                <td>@Html.DisplayFor(modelItem => item.Address)</td>
+                <td>@Html.DisplayFor(modelItem => item.PhoneNumber)</td>
+                <td>
+                    <a class="btn btn-sm btn-success text-white me-1" href="@Url.Action("Restore", new { id = item.StudentId })">
+                        <i class="fas fa-undo"></i>
+                    </a>
+                    <a class="btn btn-sm btn-primary text-white me-1" href="@Url.Action("DeletedDetails", new { id = item.StudentId })">
+                        <i class="fas fa-info-circle"></i>
+                    </a>
+                    <a class="btn btn-sm btn-danger text-white" href="@Url.Action("PermanentDelete", new { id = item.StudentId })">
+                        <i class="fas fa-trash-alt"></i>
+                    </a>
+                </td>
+                @{
+                    ViewBag.c = ViewBag.c + 1;
+                }
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+
+
+
+<div class="mt-3">
+    <ul class="pagination justify-content-center">
+        @if (currentPage > 1)
+        {
+            <li class="page-item">
+                @Html.ActionLink("Previous", "DeletedView", new { page = currentPage - 1 }, new { @class = "page-link" })
+            </li>
+        }
+
+        @for (int i = 1; i <= totalPages; i++)
+        {
+            <li class="page-item @(i == currentPage ? "active" : "")">
+                @Html.ActionLink(i.ToString(), "DeletedView", new { page = i }, new { @class = "page-link" })
+            </li>
+        }
+
+        @if (currentPage < totalPages)
+        {
+            <li class="page-item">
+                @Html.ActionLink("Next", "DeletedView", new { page = currentPage + 1 }, new { @class = "page-link" })
+            </li>
+        }
+    </ul>
+</div>
+
+@section Scripts {
+    <!-- Include jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- Include XLSX Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Include Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+
+    <script>
+
+        $("#printButton").click(function () {
+            var printContents = document.getElementById('deletedStudentsTable').outerHTML;
+            var originalContents = document.body.innerHTML;
+
+            document.body.innerHTML = "<h2>Deleted Students</h2>" + printContents;
+            window.print();
+            document.body.innerHTML = originalContents;
+            location.reload();
+        });
+
+
+        $("#exportButton").click(function () {
+            var table = document.getElementById('deletedStudentsTable');
+            var workbook = XLSX.utils.table_to_book(table, { sheet: "Deleted Students" });
+            XLSX.writeFile(workbook, 'DeletedStudentsList.xlsx');
+        });
+    </script>
+}

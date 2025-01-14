@@ -1,0 +1,119 @@
+﻿@model CrudApp.Models.StudentModel
+
+@{
+    ViewBag.Title = "Create Student";
+}
+
+<div class="d-flex align-items-center justify-content-center h-100">
+    <div class="w-50">
+        <h2 class="text-center my-4 text-primary">Add New Student</h2>
+
+        @using (Html.BeginForm())
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="card shadow-sm p-4">
+                <h4 class="card-title text-secondary">Student Information</h4>
+                <hr />
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                <!-- Name -->
+                <div class="mb-3 row">
+                    @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "col-sm-4 col-form-label fw-bold" })
+                    <div class="col-sm-10">
+                        @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control", @oninput = "validateName(this)" } })
+                        <small class="form-text text-muted">Only alphabets are allowed.</small>
+                        @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <!-- Roll Number -->
+                <div class="mb-3 row">
+                    @Html.LabelFor(model => model.RollNo, htmlAttributes: new { @class = "col-sm-4 col-form-label fw-bold" })
+                    <div class="col-sm-10">
+                        @Html.EditorFor(model => model.RollNo, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.RollNo, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <!-- Department -->
+                <div class="mb-3 row">
+                    <label class="col-sm-4 col-form-label fw-bold">Department</label>
+                    <div class="col-sm-10">
+                        @Html.DropDownListFor(
+                            model => model.DepartmentId,
+                            ViewBag.dept != null
+                                ? new SelectList(ViewBag.dept, "DepartmentId", "DepartmentName")
+                                : new SelectList(Enumerable.Empty<SelectListItem>(), "Value", "Text"),
+                            "Select Department",    
+                            new { @class = "form-control" }
+                        )
+                        @Html.ValidationMessageFor(model => model.DepartmentId, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <!-- Date of Birth -->
+                <div class="mb-3 row">
+                    @Html.LabelFor(model => model.DateOfBirth, htmlAttributes: new { @class = "col-sm-4 col-form-label fw-bold" })
+                    <div class="col-sm-10">
+                        @Html.EditorFor(model => model.DateOfBirth, new { htmlAttributes = new { @class = "form-control", type = "date" } })
+                        @Html.ValidationMessageFor(model => model.DateOfBirth, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <!-- Gender -->
+                <div class="mb-3 row">
+                    <label class="col-sm-4 col-form-label fw-bold">Gender</label>
+                    <div class="col-sm-10">
+                        <div class="form-check">
+                            @Html.RadioButtonFor(model => model.Gender, "Male", new { @class = "form-check-input", id = "Male" })
+                            <label class="form-check-label" for="Male">Male</label>
+                        </div>
+                        <div class="form-check">
+                            @Html.RadioButtonFor(model => model.Gender, "Female", new { @class = "form-check-input", id = "Female" })
+                            <label class="form-check-label" for="Female">Female</label>
+                        </div>
+                        @Html.ValidationMessageFor(model => model.Gender, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <!-- Address -->
+                <div class="mb-3 row">
+                    @Html.LabelFor(model => model.Address, htmlAttributes: new { @class = "col-sm-4 col-form-label fw-bold" })
+                    <div class="col-sm-10">
+                        @Html.EditorFor(model => model.Address, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.Address, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <!-- Phone Number -->
+                <div class="mb-3 row">
+                    @Html.LabelFor(model => model.PhoneNumber, htmlAttributes: new { @class = "col-sm-4 col-form-label fw-bold" })
+                    <div class="col-sm-10">
+                        @Html.EditorFor(model => model.PhoneNumber, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.PhoneNumber, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="row mt-4">
+                    <div class="col-sm-10 offset-sm-2">
+                        <button type="submit" class="btn btn-success">Save</button>
+                        @Html.ActionLink("Back to List", "Show")
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        // Client-side validation for Name field
+        function validateName(input) {
+            input.value = input.value.replace(/[^a-zA-Z\s]/g, '');
+        }
+    </script>
+}
+
