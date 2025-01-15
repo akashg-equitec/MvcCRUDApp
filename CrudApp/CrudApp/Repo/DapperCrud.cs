@@ -36,20 +36,8 @@ namespace CrudApp.Repo
 
 
 
-        //insert new data
-        //public void InsertStudent(StudentModel obj)
-        //{
-        //    using (var con = new SqlConnection(conn))
-        //    {
-        //        con.Open();
-        //        string sql = @"
-        //            insert into Students (Name, RollNo, DepartmentId, DateOfBirth, Gender, Address, PhoneNumber)
-        //          values (@Name, @RollNo, @DepartmentId, @DateOfBirth, @Gender, @Address, @PhoneNumber)";
-        //        con.Execute(sql, obj);
-
-        //    }
-        //}
-
+     
+        //insert data
         public void InsertStudent(StudentModel obj)
         {
             using (var con = new SqlConnection(conn))
@@ -95,19 +83,33 @@ namespace CrudApp.Repo
 
 
         //delete data 
-        public void DeleteStudent(int StudentId)
+        public bool DeleteStudent(int StudentId)
         {
-            using (var con = new SqlConnection(conn))
+            try
             {
-                con.Open();
-                string sqlquery = "select * from Students where StudentId=@StudentId";
-                var temp = con.Query<StudentModel>(sqlquery, new { StudentId });
-                var cmd = "insert into StudentsBackup values(@Name, @RollNo, @DepartmentId, @DateOfBirth, @Gender, @Address, @PhoneNumber)";
-                con.Execute(cmd, temp);
-                string sql = "delete from Students where StudentId=@StudentId";
-                con.Execute(sql, new { StudentId });
+                using (var con = new SqlConnection(conn))
+                {
+                    con.Open();
+                    string sqlQuery = "SELECT * FROM Students WHERE StudentId = @StudentId";
+                    var temp = con.Query<StudentModel>(sqlQuery, new { StudentId });
+
+                    if (temp.Any()) 
+                    {
+                        string backupQuery = "INSERT INTO StudentsBackup (Name, RollNo, DepartmentId, DateOfBirth, Gender, Address, PhoneNumber) VALUES (@Name, @RollNo, @DepartmentId, @DateOfBirth, @Gender, @Address, @PhoneNumber)";
+                        con.Execute(backupQuery, temp);
+                        string deleteQuery = "DELETE FROM Students WHERE StudentId = @StudentId";
+                        con.Execute(deleteQuery, new { StudentId });
+                        return true;
+                    }
+                }
+                return false; 
+            }
+            catch
+            {
+                return false; 
             }
         }
+
 
 
 
@@ -132,20 +134,37 @@ namespace CrudApp.Repo
 
 
         //restore data 
-        public void RestoreData(int StudentId)
+        public bool RestoreData(int StudentId)
         {
-            using (var con = new SqlConnection(conn))
+            try
             {
-                con.Open();
-                string sql1 = "SELECT * FROM StudentsBackup WHERE StudentId = @StudentId";
-                var student = con.Query<StudentModel>(sql1, new { StudentId });
-                string sql2 = @" insert into Students (Name, RollNo, DepartmentId, DateOfBirth, Gender, Address, PhoneNumber)
-                  values (@Name, @RollNo, @DepartmentId, @DateOfBirth, @Gender, @Address, @PhoneNumber)";
-                con.Execute(sql2, student);
-                string sql3 = "DELETE FROM StudentsBackup WHERE StudentId = @StudentId";
-                con.Execute(sql3, new { StudentId });
+                using (var con = new SqlConnection(conn))
+                {
+                    con.Open();
+                    string sqlCheck = "SELECT * FROM StudentsBackup WHERE StudentId = @StudentId";
+                    var student = con.Query<StudentModel>(sqlCheck, new { StudentId });
+
+                    if (student.Any()) 
+                    {
+                        string sqlRestore = @"INSERT INTO Students (Name, RollNo, DepartmentId, DateOfBirth, Gender, Address, PhoneNumber)
+                                      VALUES (@Name, @RollNo, @DepartmentId, @DateOfBirth, @Gender, @Address, @PhoneNumber)";
+                        con.Execute(sqlRestore, student);
+
+                        string sqlDelete = "DELETE FROM StudentsBackup WHERE StudentId = @StudentId";
+                        con.Execute(sqlDelete, new { StudentId });
+
+                        return true; 
+                    }
+                }
+
+                return false; 
+            }
+            catch
+            {
+                return false; 
             }
         }
+
 
 
 

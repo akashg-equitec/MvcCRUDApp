@@ -38,25 +38,7 @@ namespace CrudApp.Controllers
 
 
 
-        //Insert new data
-        //public ActionResult Create()
-        //{
-        //    using (var con = new SqlConnection(dapObj.conn))
-        //    {
-        //        con.Open();
-        //        string sql = "select * from Departments";
-        //        var temp = con.Query<StudentModel>(sql);
-        //        ViewBag.dept = temp;
-
-        //    }
-        //    return View();
-        //}
-        //[HttpPost]
-        //public ActionResult Create(StudentModel std)
-        //{
-        //    dapObj.InsertStudent(std);
-        //    return RedirectToAction("Show");
-        //}
+      
 
    
         public ActionResult Create()
@@ -129,7 +111,6 @@ namespace CrudApp.Controllers
             }
         }
 
-
         [HttpPost]
         public ActionResult Update(StudentModel model)
         {
@@ -152,9 +133,19 @@ namespace CrudApp.Controllers
                 }
                 return View(model);
             }
-            dapObj.updateData(model);
-            return RedirectToAction("Show");
+            try
+            {
+                dapObj.updateData(model);
+                TempData["SuccessMessage"] = "Data updated successfully!";
+                return RedirectToAction("Show"); 
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"An error occurred while updating the data: {ex.Message}";
+                return RedirectToAction("Show");
+            }
         }
+
 
 
 
@@ -163,8 +154,18 @@ namespace CrudApp.Controllers
         //delete data
         public ActionResult Delete(int id)
         {
-            dapObj.DeleteStudent(id);
-            return RedirectToAction("Show");
+            bool isDeleted = dapObj.DeleteStudent(id); 
+
+            if (isDeleted)
+            {
+                TempData["SuccessMessage"] = "Student deleted successfully!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to delete the student. Please try again.";
+            }
+
+            return RedirectToAction("Show"); 
         }
 
 
@@ -172,8 +173,6 @@ namespace CrudApp.Controllers
 
 
         //deleted data 
-      
-
         public ActionResult DeletedView(int page = 1)
         {
             int pageSize = 5;
@@ -193,9 +192,20 @@ namespace CrudApp.Controllers
         //restored data
         public ActionResult Restore(int id)
         {
-            dapObj.RestoreData(id);
-            return RedirectToAction("Show");
+            bool isRestored = dapObj.RestoreData(id); 
+
+            if (isRestored)
+            {
+                TempData["SuccessMessage"] = "Student restored successfully!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to restore the student. The student may not exist in the backup.";
+            }
+
+            return RedirectToAction("Show"); 
         }
+
 
 
 
