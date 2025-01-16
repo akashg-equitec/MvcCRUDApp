@@ -3,6 +3,7 @@ using CrudApp.Repo;
 using Dapper;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Net;
@@ -16,45 +17,52 @@ namespace CrudApp.Controllers
 
         DapperCrud dapObj = new DapperCrud();
 
-    
 
 
-        
-        public ActionResult Show(int page = 1)
-        {
-            int pageSize = 5;
-            int count = (page - 1) * pageSize + 1;
-            ViewBag.c = count;
-            var emp = dapObj.ShowData();
-            var Employees = emp.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-            int totalCount = emp.Count();
-            int totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = totalPages;
-            return View(Employees);
-        }
-
-
-
-
-
-      
-
-   
+        // Create (GET)
         public ActionResult Create()
         {
-            using (var con = new SqlConnection(dapObj.conn))
+            try
             {
-                con.Open();
-                string sql = "SELECT * FROM Departments";
-                var temp = con.Query<StudentModel>(sql);
-                ViewBag.dept = temp;
+                using (var con = new SqlConnection(dapObj.conn))
+                {
+                    con.Open();
+                    string sql = "SELECT * FROM Departments";
+                    var temp = con.Query<StudentModel>(sql); 
+                    ViewBag.dept = temp;
+                }
+                return View();
             }
-            return View();
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error loading Create page: {ex.Message}";
+                return RedirectToAction("Show");
+            }
         }
+
+        // Create (POST)
         [HttpPost]
         public ActionResult Create(StudentModel std)
         {
+            if (!ModelState.IsValid)
+            {
+                try
+                {
+                    using (var con = new SqlConnection(dapObj.conn))
+                    {
+                        con.Open();
+                        string sql = "SELECT * FROM Departments";
+                        var temp = con.Query<StudentModel>(sql);
+                        ViewBag.dept = temp;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    TempData["ErrorMessage"] = $"Error loading departments: {ex.Message}";
+                }
+                return View(std);
+            }
+
             try
             {
                 dapObj.InsertStudent(std);
@@ -62,15 +70,8 @@ namespace CrudApp.Controllers
                 return RedirectToAction("Show");
             }
             catch (Exception ex)
-            { 
-                TempData["ErrorMessage"] = ex.Message;
-                using (var con = new SqlConnection(dapObj.conn))
-                {
-                    con.Open();
-                    string sql = "SELECT * FROM Departments";
-                    var temp = con.Query<StudentModel>(sql);
-                    ViewBag.dept = temp;
-                }
+            {
+                TempData["ErrorMessage"] = $"Error adding student: {ex.Message}";
                 return View(std);
             }
         }
@@ -78,70 +79,104 @@ namespace CrudApp.Controllers
 
 
 
-
-
-
-        // update code
+        // Update (GET)
         public ActionResult Update(int? StudentId)
         {
             if (!StudentId.HasValue)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "StudentId is required.");
+                TempData["ErrorMessage"] = "StudentId is required.";
+                return RedirectToAction("Show");
             }
 
-            using (var con = new SqlConnection(dapObj.conn))
+            try
             {
-                con.Open();
-                string departmentSql = @"SELECT DepartmentId, DepartmentName FROM Departments";
-                var departments = con.Query<StudentModel>(departmentSql); 
-                ViewBag.dept = departments;
-
-
-                string studentSql = @"SELECT s.StudentId, s.Name, s.RollNo, s.DateOfBirth, s.Gender, 
-                             s.Address, s.PhoneNumber, s.DepartmentId 
-                             FROM Students s 
-                             WHERE s.StudentId = @StudentId";
-                var student = con.QueryFirstOrDefault<StudentModel>(studentSql, new { StudentId });
-
-                if (student == null)
+                using (var con = new SqlConnection(dapObj.conn))
                 {
-                    return HttpNotFound();
+                    con.Open();
+                    string departmentSql = "GetDepartments";
+                    var departments = con.Query<StudentModel>(departmentSql, commandType: CommandType.StoredProcedure);
+                    ViewBag.dept = departments;
+
+                    string studentSql = "GetStudentById";
+                    var student = con.QueryFirstOrDefault<StudentModel>(studentSql, new { StudentId }, commandType: CommandType.StoredProcedure);
+
+                    if (student == null)
+                    {
+                        TempData["ErrorMessage"] = "Student not found.";
+                        return RedirectToAction("Show");
+                    }
+                    return View(student);
                 }
-                return View(student);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error loading Update page: {ex.Message}";
+                return RedirectToAction("Show");
             }
         }
 
+        // Update (POST)
         [HttpPost]
         public ActionResult Update(StudentModel model)
         {
             if (!ModelState.IsValid)
             {
-                using (var con = new SqlConnection(dapObj.conn))
+                try
                 {
-                    con.Open();
-
-                    string updateSql = @"UPDATE Students
-                                     SET Name = @Name, RollNo = @RollNo, DateOfBirth = @DateOfBirth, 
-                                         Gender = @Gender, Address = @Address, PhoneNumber = @PhoneNumber, 
-                                         DepartmentId = @DepartmentId
-                                     WHERE StudentId = @StudentId";
-
-                    string departmentSql = @"SELECT DepartmentId, DepartmentName FROM Departments";
-                    var departments = con.Query<StudentModel>(departmentSql);
-                    ViewBag.dept = departments;
-                    con.Execute(updateSql, model);
+                    using (var con = new SqlConnection(dapObj.conn))
+                    {
+                        con.Open();
+                        string departmentSql = "GetDepartments";
+                        var departments = con.Query<StudentModel>(departmentSql, commandType: CommandType.StoredProcedure);
+                        ViewBag.dept = departments;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    TempData["ErrorMessage"] = $"Error loading departments: {ex.Message}";
                 }
                 return View(model);
             }
+
             try
             {
+                // Ensure DateOfBirth is valid
+                if (model.DateOfBirth == null || model.DateOfBirth < new DateTime(1753, 1, 1))
+                {
+                    throw new ArgumentException("Invalid Date of Birth.");
+                }
+
                 dapObj.updateData(model);
                 TempData["SuccessMessage"] = "Data updated successfully!";
-                return RedirectToAction("Show"); 
+                return RedirectToAction("Show");
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = $"An error occurred while updating the data: {ex.Message}";
+                TempData["ErrorMessage"] = $"Error updating data: {ex.Message}";
+                return View(model);
+            }
+        }
+
+
+
+
+
+        // Details (GET)
+        public ActionResult Details(int id)
+        {
+            try
+            {
+                var student = dapObj.ViewData(id);
+                if (student == null)
+                {
+                    TempData["ErrorMessage"] = "Student not found.";
+                    return RedirectToAction("Show");
+                }
+                return View(student);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error loading details: {ex.Message}";
                 return RedirectToAction("Show");
             }
         }
@@ -149,100 +184,77 @@ namespace CrudApp.Controllers
 
 
 
-
-
-        //delete data
-        public ActionResult Delete(int id)
+        // Show (GET)
+        public ActionResult Show(int page = 1)
         {
-            bool isDeleted = dapObj.DeleteStudent(id); 
-
-            if (isDeleted)
+            try
             {
-                TempData["SuccessMessage"] = "Student deleted successfully!";
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Failed to delete the student. Please try again.";
-            }
+                int pageSize = 10;
+                var students = dapObj.GetActiveStudents();
+                ViewBag.CurrentPage = page;
+                ViewBag.TotalPages = Math.Ceiling((double)students.Count / pageSize);
+                ViewBag.c = ((page - 1) * pageSize) + 1;
 
-            return RedirectToAction("Show"); 
+                return View(students.Skip((page - 1) * pageSize).Take(pageSize));
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error loading student list: {ex.Message}";
+                return RedirectToAction("Show");
+            }
         }
 
 
 
+        // Soft Delete (GET)
+        public ActionResult SoftDelete(int id)
+        {
+            try
+            {
+                dapObj.SoftDeleteStudent(id);
+                TempData["SuccessMessage"] = "Student soft-deleted successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error soft-deleting student: {ex.Message}";
+            }
+            return RedirectToAction("Show");
+        }
 
-
-        //deleted data 
+        // Deleted View (GET)
         public ActionResult DeletedView(int page = 1)
         {
-            int pageSize = 5;
-            int count = (page - 1) * pageSize + 1;
-            ViewBag.c = count;
-            var emp = dapObj.DeletedShow();
-            var Employees = emp.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-            int totalCount = emp.Count();
-            int totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = totalPages;
-            return View(Employees);
+            try
+            {
+                int pageSize = 10;
+                var students = dapObj.GetDeletedStudents();
+                ViewBag.CurrentPage = page;
+                ViewBag.TotalPages = Math.Ceiling((double)students.Count / pageSize);
+                ViewBag.c = ((page - 1) * pageSize) + 1;
+
+                return View(students.Skip((page - 1) * pageSize).Take(pageSize));
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error loading deleted students: {ex.Message}";
+                return RedirectToAction("Show");
+            }
         }
 
-
-
-        //restored data
+        // Restore (GET)
         public ActionResult Restore(int id)
         {
-            bool isRestored = dapObj.RestoreData(id); 
-
-            if (isRestored)
+            try
             {
-                TempData["SuccessMessage"] = "Student restored successfully!";
+                dapObj.RestoreStudent(id);
+                TempData["SuccessMessage"] = "Student restored successfully.";
             }
-            else
+            catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Failed to restore the student. The student may not exist in the backup.";
+                TempData["ErrorMessage"] = $"Error restoring student: {ex.Message}";
             }
-
-            return RedirectToAction("Show"); 
-        }
-
-
-
-
-
-
-
-        //details of one data
-        public ActionResult Details(int id)
-        {
-            return View(dapObj.ViewData(id));
-        }
-
-
-
-
-
-
-
-        // details of one deleted data
-        public ActionResult DeletedDetails(int id)
-        {
-            return View(dapObj.ViewDeletedData(id));
-        }
-
-
-
-
-
-
-        //permanent delete 
-        public ActionResult PermanentDelete(int id)
-        {
-            
-            dapObj.DeletePermData(id);
             return RedirectToAction("DeletedView");
         }
-  
 
     }
 }

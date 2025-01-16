@@ -187,7 +187,6 @@
     <Content Include="Views\Students\Create.cshtml" />
     <Content Include="Views\Students\DeletedView.cshtml" />
     <Content Include="Views\Students\Details.cshtml" />
-    <Content Include="Views\Students\DeletedDetails.cshtml" />
     <Content Include="Views\Students\Update.cshtml" />
   </ItemGroup>
   <ItemGroup>

@@ -2,8 +2,8 @@
 
 @{
     ViewBag.Title = "Show";
-    int currentPage = ViewBag.CurrentPage;
-    int totalPages = ViewBag.TotalPages;
+    double currentPage = ViewBag.CurrentPage;
+    double totalPages = ViewBag.TotalPages;
 }
 
 @if (TempData["SuccessMessage"] != null)
@@ -22,25 +22,30 @@
     </div>
 }
 
+<h2 class="text-center my-4 text-secondary shadow-sm rounded-pill">Student List</h2>
 
-
-
-<h2 class="text-center my-4 text-primary">Student List</h2>
-
-<div class="d-flex justify-content-between mb-3">
+<div class="d-flex justify-content-between mb-4">
     <div>
-        <a class="btn btn-primary me-2" href="@Url.Action("Create")">Create New</a>
-        <a class="btn btn-secondary" href="@Url.Action("DeletedView")">View Deleted</a>
+        <a class="btn btn-secondary shadow-sm rounded-pill me-2" href="@Url.Action("Create")">
+            <i class="fas fa-plus me-2"></i> Create New
+        </a>
+        <a class="btn btn-secondary shadow-sm rounded-pill" href="@Url.Action("DeletedView")">
+            <i class="fas fa-trash-restore me-2"></i> View Deleted
+        </a>
     </div>
     <div>
-        <button id="printButton" class="btn btn-warning me-2">Print</button>
-        <button id="exportButton" class="btn btn-success">Download Excel</button>
+        <button id="printButton" class="btn btn-secondary shadow-sm rounded-pill me-2">
+            <i class="fas fa-print me-2"></i> Print
+        </button>
+        <button id="exportButton" class="btn btn-secondary shadow-sm rounded-pill">
+            <i class="fas fa-download me-2"></i> Download Excel
+        </button>
     </div>
 </div>
 
-<table id="studentsTable" class="table table-bordered table-striped shadow-sm">
-    <thead class="table-dark">
-        <tr>
+<table id="studentsTable" class="table table-bordered table-striped shadow-sm rounded-pill">
+    <thead class="table-lgrey">
+        <tr class="text-secondary shadow-sm rounded-pill text-center">
             <th>SRno.</th>
             <th>@Html.DisplayNameFor(model => model.StudentId)</th>
             <th>@Html.DisplayNameFor(model => model.Name)</th>
@@ -50,14 +55,14 @@
             <th>@Html.DisplayNameFor(model => model.Gender)</th>
             <th>@Html.DisplayNameFor(model => model.Address)</th>
             <th>@Html.DisplayNameFor(model => model.PhoneNumber)</th>
-            <th>Actions</th>
+            <th class="action-column">Actions</th>  <!-- Adding class to the actions column -->
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model)
         {
-            <tr>
-                <td> @ViewBag.c</td>
+            <tr class="text-center">
+                <td>@ViewBag.c</td>
                 <td>@Html.DisplayFor(modelItem => item.StudentId)</td>
                 <td>@Html.DisplayFor(modelItem => item.Name)</td>
                 <td>@Html.DisplayFor(modelItem => item.RollNo)</td>
@@ -66,16 +71,19 @@
                 <td>@Html.DisplayFor(modelItem => item.Gender)</td>
                 <td>@Html.DisplayFor(modelItem => item.Address)</td>
                 <td>@Html.DisplayFor(modelItem => item.PhoneNumber)</td>
-                <td>
-                    <a class="btn btn-sm btn-info text-white me-1" href="@Url.Action("Update", "Students", new { StudentId = item.StudentId })">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    <a class="btn btn-sm btn-primary text-white me-1" href="@Url.Action("Details", new { id = item.StudentId })">
-                        <i class="fas fa-info-circle"></i>
-                    </a>
-                    <a class="btn btn-sm btn-danger text-white" href="@Url.Action("Delete", new { id = item.StudentId })">
-                        <i class="fas fa-trash-alt"></i>
-                    </a>
+                <td class="d-flex justify-content-center align-items-center">
+                    @if (item.StudentId != null)
+                    {
+                        <a class="btn btn-sm btn-secondary shadow-sm rounded-pill text-white me-2" href="@Url.Action("Update", "Students", new { StudentId = item.StudentId })" aria-label="Edit Student">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a class="btn btn-sm btn-secondary shadow-sm rounded-pill text-white me-2" href="@Url.Action("Details", new { id = item.StudentId })" aria-label="View Details">
+                            <i class="fas fa-info-circle"></i>
+                        </a>
+                        <a class="btn btn-sm btn-secondary shadow-sm rounded-pill text-white me-2" href="@Url.Action("SoftDelete", new { id = item.StudentId })" aria-label="Delete Student">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                    }
                 </td>
                 @{
                     ViewBag.c = ViewBag.c + 1;
@@ -85,65 +93,64 @@
     </tbody>
 </table>
 
-
-
-<div class="mt-3">
-    <ul class="pagination justify-content-center">
+<div class="mt-4">
+    <ul class="pagination justify-content-center text-secondary">
         @if (currentPage > 1)
         {
             <li class="page-item">
-                @Html.ActionLink("Previous", "Show", new { page = currentPage - 1 }, new { @class = "page-link" })
+                @Html.ActionLink("Previous", "Show", new { page = currentPage - 1 }, new { @class = "page-link rounded-pill text-secondary" })
             </li>
         }
 
         @for (int i = 1; i <= totalPages; i++)
         {
-            <li class="page-item @(i == currentPage ? "active" : "")">
-                @Html.ActionLink(i.ToString(), "Show", new { page = i }, new { @class = "page-link" })
+            <li class="page-item @(i == currentPage ? "bg-secondary text-white" : "")">
+                @Html.ActionLink(i.ToString(), "Show", new { page = i }, new { @class = "page-link rounded-pill text-secondary" })
             </li>
         }
 
         @if (currentPage < totalPages)
         {
             <li class="page-item">
-                @Html.ActionLink("Next", "Show", new { page = currentPage + 1 }, new { @class = "page-link" })
+                @Html.ActionLink("Next", "Show", new { page = currentPage + 1 }, new { @class = "page-link rounded-pill text-secondary" })
             </li>
         }
     </ul>
 </div>
 
 @section Scripts {
-    <!-- Include jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-
-    <!-- Include XLSX Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-    <!-- Include Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
 
     <script>
         // Print Functionality
         $("#printButton").click(function () {
+            // Hide the last column (Actions column) before printing
+            $(".action-column, #studentsTable th:last-child, #studentsTable td:last-child").css("display", "none");
+
             var printContents = document.getElementById('studentsTable').outerHTML;
             var originalContents = document.body.innerHTML;
 
-            document.body.innerHTML = "<h2>Student List</h2>" + printContents;
+            document.body.innerHTML = "<h2 class='text-center'>Student List</h2>" + printContents;
             window.print();
             document.body.innerHTML = originalContents;
-            location.reload();
+
+            // Restore the last column (Actions column) after printing
+            $(".action-column, #studentsTable th:last-child, #studentsTable td:last-child").css("display", "table-cell");
         });
 
         // Export to Excel Functionality
         $("#exportButton").click(function () {
+            // Hide the last column (Actions column) before exporting to Excel
+            $(".action-column, #studentsTable th:last-child, #studentsTable td:last-child").css("display", "none");
+
             var table = document.getElementById('studentsTable');
             var workbook = XLSX.utils.table_to_book(table, { sheet: "Students" });
             XLSX.writeFile(workbook, 'StudentList.xlsx');
+
+            // Restore the last column (Actions column) after export
+            $(".action-column, #studentsTable th:last-child, #studentsTable td:last-child").css("display", "table-cell");
         });
-
-
     </script>
 }
-
-
-

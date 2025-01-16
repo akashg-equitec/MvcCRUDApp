@@ -3,6 +3,7 @@ using Dapper;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Net;
@@ -14,52 +15,30 @@ namespace CrudApp.Repo
 {
     public class DapperCrud
     {
-       public    string conn = ConfigurationManager.ConnectionStrings["connectStr"].ConnectionString;
+        public    string conn = ConfigurationManager.ConnectionStrings["connectStr"].ConnectionString;
         StudentModel studObj = new StudentModel();
-            
 
 
-
-        //shows students data
-        public List<StudentModel> ShowData()
-        {
-            using (var con = new SqlConnection(conn))
-            {
-                con.Open();
-                string sql = @"
-                    select s.StudentID, s.Name, s.RollNo, s.DateOfBirth, s.Gender, s.Address, s.PhoneNumber, 
-                    d.DepartmentName AS Department from Students s inner join Departments d on s.DepartmentId = d.DepartmentId";
-                return con.Query<StudentModel>(sql).ToList();
-            }
-        }
-
-
-
-
-     
-        //insert data
+        //insert students data
         public void InsertStudent(StudentModel obj)
         {
             using (var con = new SqlConnection(conn))
             {
                 con.Open();
-                string checkSql = "SELECT COUNT(*) FROM Students WHERE RollNo = @RollNo";
-                int existingCount = con.ExecuteScalar<int>(checkSql, new { obj.RollNo });
-
-                if (existingCount > 0)
+                string procedure = "InsertStudent";
+                var parameters = new
                 {
-                    throw new Exception("Roll number already exists in the database.");
-                }
-
-                string insertSql = @"
-                    INSERT INTO Students (Name, RollNo, DepartmentId, DateOfBirth, Gender, Address, PhoneNumber)
-                    VALUES (@Name, @RollNo, @DepartmentId, @DateOfBirth, @Gender, @Address, @PhoneNumber)";
-                con.Execute(insertSql, obj);
+                    obj.Name,
+                    obj.RollNo,
+                    obj.DepartmentId,
+                    obj.DateOfBirth,
+                    obj.Gender,
+                    obj.Address,
+                    obj.PhoneNumber
+                };
+                con.Execute(procedure, parameters, commandType: CommandType.StoredProcedure);
             }
         }
-
-
-
 
 
         //update one data
@@ -68,106 +47,21 @@ namespace CrudApp.Repo
             using (var con = new SqlConnection(conn))
             {
                 con.Open();
-                string sql = @"
-            UPDATE Students 
-            SET Name = @Name, RollNo = @RollNo, DateOfBirth = @DateOfBirth, 
-                Gender = @Gender, Address = @Address, PhoneNumber = @PhoneNumber, 
-                DepartmentId = @DepartmentId
-            WHERE StudentId = @StudentId";
-                con.Execute(sql, obj);
-            }
-        }
-
-
-
-
-
-        //delete data 
-        public bool DeleteStudent(int StudentId)
-        {
-            try
-            {
-                using (var con = new SqlConnection(conn))
+                string procedure = "UpdateStudent";
+                var parameters = new
                 {
-                    con.Open();
-                    string sqlQuery = "SELECT * FROM Students WHERE StudentId = @StudentId";
-                    var temp = con.Query<StudentModel>(sqlQuery, new { StudentId });
-
-                    if (temp.Any()) 
-                    {
-                        string backupQuery = "INSERT INTO StudentsBackup (Name, RollNo, DepartmentId, DateOfBirth, Gender, Address, PhoneNumber) VALUES (@Name, @RollNo, @DepartmentId, @DateOfBirth, @Gender, @Address, @PhoneNumber)";
-                        con.Execute(backupQuery, temp);
-                        string deleteQuery = "DELETE FROM Students WHERE StudentId = @StudentId";
-                        con.Execute(deleteQuery, new { StudentId });
-                        return true;
-                    }
-                }
-                return false; 
-            }
-            catch
-            {
-                return false; 
+                    obj.StudentId,
+                    obj.Name,
+                    obj.RollNo,
+                    obj.DateOfBirth,
+                    obj.Gender,
+                    obj.Address,
+                    obj.PhoneNumber,
+                    obj.DepartmentId
+                };
+                con.Execute(procedure, parameters, commandType: CommandType.StoredProcedure);
             }
         }
-
-
-
-
-
-
-
-        //deleted data
-        public List<StudentModel> DeletedShow()
-        {
-            using (var con = new SqlConnection(conn))
-            {
-                con.Open();
-                string sql = @" select s.StudentID, s.Name, s.RollNo, s.DateOfBirth, s.Gender, s.Address, s.PhoneNumber, 
-                    d.DepartmentName AS Department from StudentsBackup s inner join Departments d on s.DepartmentId = d.DepartmentId";
-                return con.Query<StudentModel>(sql).ToList();
-            }
-        }
-
-
-
-
-
-
-        //restore data 
-        public bool RestoreData(int StudentId)
-        {
-            try
-            {
-                using (var con = new SqlConnection(conn))
-                {
-                    con.Open();
-                    string sqlCheck = "SELECT * FROM StudentsBackup WHERE StudentId = @StudentId";
-                    var student = con.Query<StudentModel>(sqlCheck, new { StudentId });
-
-                    if (student.Any()) 
-                    {
-                        string sqlRestore = @"INSERT INTO Students (Name, RollNo, DepartmentId, DateOfBirth, Gender, Address, PhoneNumber)
-                                      VALUES (@Name, @RollNo, @DepartmentId, @DateOfBirth, @Gender, @Address, @PhoneNumber)";
-                        con.Execute(sqlRestore, student);
-
-                        string sqlDelete = "DELETE FROM StudentsBackup WHERE StudentId = @StudentId";
-                        con.Execute(sqlDelete, new { StudentId });
-
-                        return true; 
-                    }
-                }
-
-                return false; 
-            }
-            catch
-            {
-                return false; 
-            }
-        }
-
-
-
-
 
 
         //Show Details of one data
@@ -176,37 +70,14 @@ namespace CrudApp.Repo
             using (var con = new SqlConnection(conn))
             {
                 con.Open();
-     
-                string sql = @"
-                    select s.Name, s.RollNo, s.DateOfBirth, s.Gender, s.Address, s.PhoneNumber, 
-                    d.DepartmentName AS Department from Students s inner join Departments d on s.DepartmentId = d.DepartmentId where s.StudentId=@StudentId";
-
-                return con.QueryFirstOrDefault<StudentModel>(sql, new { StudentId });
+                string procedure = "GetStudentDetails";
+                return con.QueryFirstOrDefault<StudentModel>(
+                    procedure,
+                    new { StudentId },
+                    commandType: CommandType.StoredProcedure
+                );
             }
         }
-
-
-
-
-
-
-        //Show Details of one Deleted Data
-        public StudentModel ViewDeletedData(int StudentId)
-        {
-            using (var con = new SqlConnection(conn))
-            {
-                con.Open();
-
-                string sql = @"
-                    select s.Name, s.RollNo, s.DateOfBirth, s.Gender, s.Address, s.PhoneNumber, d.DepartmentName 
-                    AS Department from StudentsBackup s inner join Departments d on s.DepartmentId = d.DepartmentId where s.StudentId=@StudentId";
-                
-                return con.QueryFirstOrDefault<StudentModel>(sql, new { StudentId });
-            }
-        }
-
-
-
 
 
 
@@ -223,10 +94,48 @@ namespace CrudApp.Repo
 
 
 
+        // SOFT DELETE
+        public void SoftDeleteStudent(int studentId)
+        {
+            using (var con = new SqlConnection(conn))
+            {
+                con.Open();
+                con.Execute("SoftDeleteStudent", new { StudentId = studentId }, commandType: CommandType.StoredProcedure);
+            }
+        }
 
 
+        // NOT DELETED STUDENTS
+        public List<StudentModel> GetActiveStudents()
+        {
+            using (var con = new SqlConnection(conn))
+            {
+                con.Open();
+                return con.Query<StudentModel>("GetActiveStudents", commandType: CommandType.StoredProcedure).ToList();
+            }
+        }
 
 
+        // GET DELETED STUDENTS
+        public List<StudentModel> GetDeletedStudents()
+        {
+            using (var con = new SqlConnection(conn))
+            {
+                con.Open();
+                return con.Query<StudentModel>("GetDeletedStudents", commandType: CommandType.StoredProcedure).ToList();
+            }
+        }
+
+
+        // RESTORED DELETED STUDENTS 
+        public void RestoreStudent(int studentId)
+        {
+            using (var con = new SqlConnection(conn))
+            {
+                con.Open();
+                con.Execute("RestoreStudent", new { StudentId = studentId }, commandType: CommandType.StoredProcedure);
+            }
+        }
 
 
     }

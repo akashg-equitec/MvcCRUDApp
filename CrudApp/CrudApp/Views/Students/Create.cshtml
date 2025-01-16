@@ -4,80 +4,85 @@
     ViewBag.Title = "Create Student";
 }
 
-<div class="d-flex align-items-center justify-content-center h-100">
-    <div class="w-50">
-        <h2 class="text-center my-4 text-primary">Add New Student</h2>
+<div class="d-flex align-items-center justify-content-center min-vh-100 bg-light">
+    <div class="w-50 col-md-8 col-lg-6">
+        <h2 class="text-center my-4 text-gray">Add New Student</h2>
+
         @if (TempData["SuccessMessage"] != null)
         {
-            <div class="alert alert-success">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
                 @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         }
 
         @if (TempData["ErrorMessage"] != null)
         {
-            <div class="alert alert-danger">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         }
+
         @using (Html.BeginForm())
         {
             @Html.AntiForgeryToken()
 
-            <div class="card shadow-sm p-4">
-                <h4 class="card-title text-secondary">Student Information</h4>
+            <div class="card shadow-lg p-5 rounded-4 border-0">
+                <h4 class="card-title text-secondary mb-3">Student Information</h4>
                 <hr />
+
                 @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
                 <!-- Name -->
-                <div class="mb-3 row">
-                    @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "col-sm-4 col-form-label fw-bold" })
-                    <div class="col-sm-10">
-                        @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control", @oninput = "validateName(this)" } })
-                        <small class="form-text text-muted">Only alphabets are allowed.</small>
-                        @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                <div class="mb-4">
+                    @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "form-label fw-bold" })
+                    <div class="input-group">
+                        @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control rounded-3", @oninput = "validateName(this)" } })
                     </div>
+                    <small class="form-text text-muted">Only alphabets are allowed.</small>
+                    @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
                 </div>
 
                 <!-- Roll Number -->
-                <div class="mb-3 row">
-                    @Html.LabelFor(model => model.RollNo, htmlAttributes: new { @class = "col-sm-4 col-form-label fw-bold" })
-                    <div class="col-sm-10">
-                        @Html.EditorFor(model => model.RollNo, new { htmlAttributes = new { @class = "form-control" } })
-                        @Html.ValidationMessageFor(model => model.RollNo, "", new { @class = "text-danger" })
+                <div class="mb-4">
+                    @Html.LabelFor(model => model.RollNo, htmlAttributes: new { @class = "form-label fw-bold" })
+                    <div class="input-group">
+                        @Html.EditorFor(model => model.RollNo, new { htmlAttributes = new { @class = "form-control rounded-3" } })
                     </div>
+                    @Html.ValidationMessageFor(model => model.RollNo, "", new { @class = "text-danger" })
                 </div>
 
                 <!-- Department -->
-                <div class="mb-3 row">
-                    <label class="col-sm-4 col-form-label fw-bold">Department</label>
-                    <div class="col-sm-10">
+                <div class="mb-4">
+                    @Html.Label("Department", htmlAttributes: new { @class = "form-label fw-bold" })
+                    <div class="input-group">
                         @Html.DropDownListFor(
                             model => model.DepartmentId,
                             ViewBag.dept != null
                                 ? new SelectList(ViewBag.dept, "DepartmentId", "DepartmentName")
                                 : new SelectList(Enumerable.Empty<SelectListItem>(), "Value", "Text"),
                             "Select Department",
-                            new { @class = "form-control" }
+                            new { @class = "form-control rounded-3" }
                         )
-                        @Html.ValidationMessageFor(model => model.DepartmentId, "", new { @class = "text-danger" })
                     </div>
+                    @Html.ValidationMessageFor(model => model.DepartmentId, "", new { @class = "text-danger" })
                 </div>
 
                 <!-- Date of Birth -->
-                <div class="mb-3 row">
-                    @Html.LabelFor(model => model.DateOfBirth, htmlAttributes: new { @class = "col-sm-4 col-form-label fw-bold" })
-                    <div class="col-sm-10">
-                        @Html.EditorFor(model => model.DateOfBirth, new { htmlAttributes = new { @class = "form-control", type = "date" } })
-                        @Html.ValidationMessageFor(model => model.DateOfBirth, "", new { @class = "text-danger" })
+                <div class="mb-4">
+                    @Html.LabelFor(model => model.DateOfBirth, htmlAttributes: new { @class = "form-label fw-bold" })
+                    <div class="input-group">
+                        @Html.EditorFor(model => model.DateOfBirth, new { htmlAttributes = new { @class = "form-control rounded-3", type = "date" } })
                     </div>
+                    @Html.ValidationMessageFor(model => model.DateOfBirth, "", new { @class = "text-danger" })
                 </div>
 
                 <!-- Gender -->
-                <div class="mb-3 row">
-                    <label class="col-sm-4 col-form-label fw-bold">Gender</label>
-                    <div class="col-sm-10">
-                        <div class="form-check">
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Gender</label>
+                    <div class="d-flex justify-content-start">
+                        <div class="form-check me-4">
                             @Html.RadioButtonFor(model => model.Gender, "Male", new { @class = "form-check-input", id = "Male" })
                             <label class="form-check-label" for="Male">Male</label>
                         </div>
@@ -85,34 +90,32 @@
                             @Html.RadioButtonFor(model => model.Gender, "Female", new { @class = "form-check-input", id = "Female" })
                             <label class="form-check-label" for="Female">Female</label>
                         </div>
-                        @Html.ValidationMessageFor(model => model.Gender, "", new { @class = "text-danger" })
                     </div>
+                    @Html.ValidationMessageFor(model => model.Gender, "", new { @class = "text-danger" })
                 </div>
 
                 <!-- Address -->
-                <div class="mb-3 row">
-                    @Html.LabelFor(model => model.Address, htmlAttributes: new { @class = "col-sm-4 col-form-label fw-bold" })
-                    <div class="col-sm-10">
-                        @Html.EditorFor(model => model.Address, new { htmlAttributes = new { @class = "form-control" } })
-                        @Html.ValidationMessageFor(model => model.Address, "", new { @class = "text-danger" })
+                <div class="mb-4">
+                    @Html.LabelFor(model => model.Address, htmlAttributes: new { @class = "form-label fw-bold" })
+                    <div class="input-group">
+                        @Html.EditorFor(model => model.Address, new { htmlAttributes = new { @class = "form-control rounded-3" } })
                     </div>
+                    @Html.ValidationMessageFor(model => model.Address, "", new { @class = "text-danger" })
                 </div>
 
                 <!-- Phone Number -->
-                <div class="mb-3 row">
-                    @Html.LabelFor(model => model.PhoneNumber, htmlAttributes: new { @class = "col-sm-4 col-form-label fw-bold" })
-                    <div class="col-sm-10">
-                        @Html.EditorFor(model => model.PhoneNumber, new { htmlAttributes = new { @class = "form-control" } })
-                        @Html.ValidationMessageFor(model => model.PhoneNumber, "", new { @class = "text-danger" })
+                <div class="mb-4">
+                    @Html.LabelFor(model => model.PhoneNumber, htmlAttributes: new { @class = "form-label fw-bold" })
+                    <div class="input-group">
+                        @Html.EditorFor(model => model.PhoneNumber, new { htmlAttributes = new { @class = "form-control rounded-3" } })
                     </div>
+                    @Html.ValidationMessageFor(model => model.PhoneNumber, "", new { @class = "text-danger" })
                 </div>
 
                 <!-- Submit Button -->
-                <div class="row mt-4">
-                    <div class="col-sm-10 offset-sm-2">
-                        <button type="submit" class="btn btn-success">Save</button>
-                        @Html.ActionLink("Back to List", "Show")
-                    </div>
+                <div class="d-flex justify-content-between">
+                    <a href="@Url.Action("Show")" class="btn btn-outline-secondary rounded-3 px-4 py-2">Cancel</a>
+                    <button type="submit" class="btn btn-outline-secondary rounded-3 px-4 py-2">Save</button>
                 </div>
             </div>
         }
@@ -122,10 +125,8 @@
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")
     <script>
-        // Client-side validation for Name field
         function validateName(input) {
             input.value = input.value.replace(/[^a-zA-Z\s]/g, '');
         }
     </script>
 }
-

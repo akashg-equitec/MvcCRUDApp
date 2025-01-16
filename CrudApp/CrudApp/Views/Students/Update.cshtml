@@ -6,7 +6,7 @@
 
 <div class="d-flex align-items-center justify-content-center h-100">
     <div class="w-50">
-        <h2 class="text-center my-4 text-primary">Update Student</h2>
+        <h2 class="text-center my-4 text-secondary shadow-sm rounded-pill">Update Student</h2>
         @using (Html.BeginForm())
         {
             @Html.AntiForgeryToken()
@@ -80,10 +80,10 @@
                     </div>
                 </div>
 
-                <div class="row mt-4">
-                    <div class="col-sm-10 offset-sm-2">
-                        <button type="submit" class="btn btn-success">Update</button>
-                        <a href="@Url.Action("Index")" class="btn btn-secondary ms-2">Cancel</a>
+                <div class="display-flex mt-4">
+                    <div class="justify-content-center align-items-center">
+                        <button type="submit" class="btn btn-secondary shadow-sm rounded-pill">Update</button>
+                        <a href="@Url.Action("Show")" class="btn btn-secondary ms-2">Cancel</a>
                     </div>
                 </div>
             </div>
