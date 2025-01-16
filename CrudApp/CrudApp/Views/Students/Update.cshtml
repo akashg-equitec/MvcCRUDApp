@@ -51,7 +51,7 @@
                 <div class="mb-3 row">
                     @Html.LabelFor(model => model.DateOfBirth, new { @class = "col-sm-2 col-form-label fw-bold" })
                     <div class="col-sm-10">
-                        @Html.EditorFor(model => model.DateOfBirth, new { htmlAttributes = new { @class = "form-control", type = "date" } })
+                        @Html.EditorFor(model => model.DateOfBirth, new { htmlAttributes = new { @class = "form-control", @Value = Model.DateOfBirth.ToString("yyyy-MM-dd") } })
                         @Html.ValidationMessageFor(model => model.DateOfBirth, "", new { @class = "text-danger" })
                     </div>
                 </div>
