@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+using static CrudApp.Repo.DapperCrud;
 
 namespace CrudApp.Controllers
 {
@@ -35,6 +36,7 @@ namespace CrudApp.Controllers
             }
             catch (Exception ex)
             {
+                ErrorLogger.LogError(ex);
                 TempData["ErrorMessage"] = $"Error loading Create page: {ex.Message}";
                 return RedirectToAction("Show");
             }
@@ -58,6 +60,8 @@ namespace CrudApp.Controllers
                 }
                 catch (Exception ex)
                 {
+                    // Log the error to a text file
+                    ErrorLogger.LogError(ex);
                     TempData["ErrorMessage"] = $"Error loading departments: {ex.Message}";
                 }
                 return View(std);
@@ -71,10 +75,13 @@ namespace CrudApp.Controllers
             }
             catch (Exception ex)
             {
+                // Log the error to a text file
+                ErrorLogger.LogError(ex);
                 TempData["ErrorMessage"] = $"Error adding student: {ex.Message}";
                 return View(std);
             }
         }
+
 
 
 
@@ -110,6 +117,7 @@ namespace CrudApp.Controllers
             }
             catch (Exception ex)
             {
+                ErrorLogger.LogError(ex);
                 TempData["ErrorMessage"] = $"Error loading Update page: {ex.Message}";
                 return RedirectToAction("Show");
             }
@@ -152,6 +160,7 @@ namespace CrudApp.Controllers
             }
             catch (Exception ex)
             {
+                ErrorLogger.LogError(ex);
                 TempData["ErrorMessage"] = $"Error updating data: {ex.Message}";
                 return View(model);
             }
@@ -176,6 +185,7 @@ namespace CrudApp.Controllers
             }
             catch (Exception ex)
             {
+                ErrorLogger.LogError(ex);
                 TempData["ErrorMessage"] = $"Error loading details: {ex.Message}";
                 return RedirectToAction("Show");
             }
@@ -199,11 +209,28 @@ namespace CrudApp.Controllers
             }
             catch (Exception ex)
             {
+                ErrorLogger.LogError(ex);
                 TempData["ErrorMessage"] = $"Error loading student list: {ex.Message}";
-                return RedirectToAction("Show");
+                return RedirectToAction("Error");
             }
         }
 
+        // Permanent Delete (GET)
+        public ActionResult Delete(int id)
+        {
+            try
+            {
+                dapObj.DeletePermData(id);
+                TempData["SuccessMessage"] = "Student deleted successfully.";
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogError(ex);
+                TempData["ErrorMessage"] = $"Error deleting student: {ex.Message}";
+                return RedirectToAction("Error");
+            }
+            return RedirectToAction("DeletedView");
+        }
 
 
         // Soft Delete (GET)
@@ -216,7 +243,9 @@ namespace CrudApp.Controllers
             }
             catch (Exception ex)
             {
+                ErrorLogger.LogError(ex);
                 TempData["ErrorMessage"] = $"Error soft-deleting student: {ex.Message}";
+                return RedirectToAction("Error");
             }
             return RedirectToAction("Show");
         }
@@ -236,8 +265,9 @@ namespace CrudApp.Controllers
             }
             catch (Exception ex)
             {
+                ErrorLogger.LogError(ex);
                 TempData["ErrorMessage"] = $"Error loading deleted students: {ex.Message}";
-                return RedirectToAction("Show");
+                return RedirectToAction("Error");
             }
         }
 
@@ -251,7 +281,9 @@ namespace CrudApp.Controllers
             }
             catch (Exception ex)
             {
+                ErrorLogger.LogError(ex);
                 TempData["ErrorMessage"] = $"Error restoring student: {ex.Message}";
+                return RedirectToAction("Error");
             }
             return RedirectToAction("DeletedView");
         }

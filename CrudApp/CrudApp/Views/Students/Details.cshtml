@@ -4,12 +4,11 @@
     ViewBag.Title = "Details";
 }
 
-<h2>Details</h2>
+<h2 class="text-center">Details</h2>
 
-<div>
-    <h4>StudentModel</h4>
+<div class="card shadow-lg p-5 rounded-4 border-3">
     <hr />
-    <dl class="dl-horizontal">       
+    <dl class="dl-horizontal shadow-lg p-5 rounded-4 border-3">
         <dt>
             @Html.DisplayNameFor(model => model.Name)
         </dt>
@@ -67,7 +66,8 @@
         </dd>
 
     </dl>
+    <div class="mb-3 text-secondary">
+        <a href="@Url.Action("Show")" class="btn btn-outline-secondary rounded-pill px-4 py-2">Back</a>
+    </div>
 </div>
-<p>
-    @Html.ActionLink("Back to List", "Show")
-</p>
+
