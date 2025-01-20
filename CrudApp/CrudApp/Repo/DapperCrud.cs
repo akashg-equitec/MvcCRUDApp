@@ -212,58 +212,5 @@ namespace CrudApp.Repo
         }
 
 
-
-
-        public List<StudentModel> GetSortedStudents(string columnName, string sortOrder, int pageNumber, int pageSize)
-        {
-            using (SqlConnection con = new SqlConnection(conn))
-            {
-                SqlCommand cmd = new SqlCommand("GetSortedStudents", con)
-                {
-                    CommandType = CommandType.StoredProcedure
-                };
-
-                cmd.Parameters.AddWithValue("@ColumnName", columnName);
-                cmd.Parameters.AddWithValue("@SortOrder", sortOrder);
-                cmd.Parameters.AddWithValue("@PageNumber", pageNumber);
-                cmd.Parameters.AddWithValue("@PageSize", pageSize);
-
-                con.Open();
-                SqlDataReader reader = cmd.ExecuteReader();
-                List<StudentModel> students = new List<StudentModel>();
-
-                while (reader.Read())
-                {
-                    students.Add(new StudentModel
-                    {
-                        StudentId = reader.GetInt32(reader.GetOrdinal("StudentId")),
-                        Name = reader.GetString(reader.GetOrdinal("Name")),
-                        RollNo = reader.GetInt32(reader.GetOrdinal("RollNo")),
-                        Department = reader.GetString(reader.GetOrdinal("Department")),
-                        Gender = reader.GetString(reader.GetOrdinal("Gender")),
-                        Address = reader.GetString(reader.GetOrdinal("Address")),
-                        PhoneNumber = reader.GetString(reader.GetOrdinal("PhoneNumber")),
-                        DateOfBirth = reader.GetDateTime(reader.GetOrdinal("DateOfBirth"))
-                    });
-                }
-                return students;
-            }
-        }
-
-        public int GetTotalStudentsCount()
-        {
-            using (SqlConnection con = new SqlConnection(conn))
-            {
-                SqlCommand cmd = new SqlCommand("GetTotalStudentsCount", con)
-                {
-                    CommandType = CommandType.StoredProcedure
-                };
-
-                con.Open();
-                return (int)cmd.ExecuteScalar();
-            }
-        }
-
-
     }
 }
