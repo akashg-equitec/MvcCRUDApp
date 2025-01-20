@@ -68,26 +68,172 @@
                     display: none !important;
                 }
         }
+
+        .d-flex {
+            display: flex;
+        }
+
+        .justify-content-between {
+            justify-content: space-between;
+        }
+
+        .align-items-center {
+            align-items: center;
+        }
+
+        .sort-btn {
+            padding: 0;
+            margin-left: 5px;
+            color: black; /* Adjust color if needed */
+            border: none;
+            cursor: pointer;
+        }
+
+            .sort-btn:hover {
+                color: black;
+            }
+
+        th {
+            white-space: nowrap;
+        }
     </style>
 </head>
+
+
+
+  
+<div class="d-flex justify-content-start mb-4">
+    <div class="me-2">
+        <input type="text" id="searchBar" class="form-control shadow-sm rounded-pill" placeholder="Search by Name" value="@Request.QueryString["searchQuery"]" />
+    </div>
+    <div class="me-2">
+        <select id="departmentDropdown" class="form-control shadow-sm rounded-pill">
+            <option value="">Select Department</option>
+            @foreach (var dept in ViewBag.Dept as List<CrudApp.Models.StudentModel>)
+            {
+                <option value="@dept.DepartmentName" @(dept.DepartmentName == Request.QueryString["selectedDepartment"] ? "selected" : "")>@dept.DepartmentName</option>
+            }
+        </select>
+    </div>
+    <button id="filterButton" class="btn btn-secondary shadow-sm rounded-pill" type="button">
+        <i class="fas fa-search me-2"></i> Search
+    </button>
+</div>
+
+
+
+
+<script>
+       // Filter functionality
+function filterResults() {
+    const searchQuery = $("#searchBar").val();
+    const selectedDepartment = $("#departmentDropdown").val();
+
+    console.log("Search Query: ", searchQuery);
+    console.log("Selected Department: ", selectedDepartment);
+
+    // Reload the page with query parameters
+    window.location.href = '@Url.Action("Show")?searchQuery=' + searchQuery + '&selectedDepartment=' + selectedDepartment;
+}
+
+
+
+    $(document).ready(function () {
+        // Ensure that the button click event is correctly bound
+        $("#filterButton").on("click", function () {
+            console.log("Search button clicked.");  // Check if the button is clicked
+            filterResults();
+        });
+
+        // Trigger filter when Enter is pressed in search bar
+        $("#searchBar").on("keypress", function (e) {
+            if (e.which === 13) {
+                console.log("Enter key pressed."); // Check if Enter key is being pressed
+                filterResults();
+            }
+        });
+
+        // Trigger filter when department is changed
+        $("#departmentDropdown").on("change", function () {
+            console.log("Department changed.");  // Check if department is changed
+            filterResults();
+        });
+    });
+
+// Trigger filter when department is changed
+$("#departmentDropdown").on("change", function () {
+    filterResults();
+});
+
+</script>
+
+
+
 
 
 
 <table id="studentsTable" class="table table-bordered table-striped shadow-sm rounded-pill">
     <thead class="table-lgrey">
         <tr class="text-secondary shadow-sm rounded-pill text-center">
-            <th>SRno.</th>
-            <th class="hidden-column">@Html.DisplayNameFor(model => model.StudentId)</thclass="hidden-column">
-            <th>@Html.DisplayNameFor(model => model.Name)</th>
-            <th>@Html.DisplayNameFor(model => model.RollNo)</th>
-            <th>@Html.DisplayNameFor(model => model.Department)</th>
-            <th>Age</th>
-            <th>@Html.DisplayNameFor(model => model.Gender)</th>
-            <th>@Html.DisplayNameFor(model => model.Address)</th>
-            <th>@Html.DisplayNameFor(model => model.PhoneNumber)</th>
-            <th class="action-column">Actions</th>  <!-- Adding class to the actions column -->
+            <th>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>SRno.</span>
+                    <button type="button" class="btn btn-sm btn-link text-decoration-none sort-btn" data-column="0" data-order="desc">⇩</button>
+                </div>
+            </th>
+            <th class="hidden-column">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>@Html.DisplayNameFor(model => model.StudentId)</span>
+                    <button type="button" class="btn btn-sm btn-link text-decoration-none sort-btn hidden-column" data-column="1" data-order="desc">⇩</button>
+                </div>
+            </th>
+            <th>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>@Html.DisplayNameFor(model => model.Name)</span>
+                    <button type="button" class="btn btn-sm btn-link text-decoration-none sort-btn" data-column="2" data-order="desc">⇩</button>
+                </div>
+            </th>
+            <th>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>@Html.DisplayNameFor(model => model.RollNo)</span>
+                    <button type="button" class="btn btn-sm btn-link text-decoration-none sort-btn" data-column="3" data-order="desc">⇩</button>
+                </div>
+            </th>
+            <th>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>@Html.DisplayNameFor(model => model.Department)</span>
+                    <button type="button" class="btn btn-sm btn-link text-decoration-none sort-btn" data-column="4" data-order="desc">⇩</button>
+                </div>
+            </th>
+            <th>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Age</span>
+                    <button type="button" class="btn btn-sm btn-link text-decoration-none sort-btn" data-column="5" data-order="desc">⇩</button>
+                </div>
+            </th>
+            <th>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>@Html.DisplayNameFor(model => model.Gender)</span>
+                    <button type="button" class="btn btn-sm btn-link text-decoration-none sort-btn" data-column="6" data-order="desc">⇩</button>
+                </div>
+            </th>
+            <th>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>@Html.DisplayNameFor(model => model.Address)</span>
+                    <button type="button" class="btn btn-sm btn-link text-decoration-none sort-btn" data-column="7" data-order="desc">⇩</button>
+                </div>
+            </th>
+            <th>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>@Html.DisplayNameFor(model => model.PhoneNumber)</span>
+                    <button type="button" class="btn btn-sm btn-link text-decoration-none sort-btn" data-column="8" data-order="desc">⇩</button>
+                </div>
+            </th>
+            <th class="action-column">Actions</th>
         </tr>
     </thead>
+
+
     <tbody>
         @foreach (var item in Model)
         {
@@ -152,6 +298,35 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+    <script>
+        $(document).ready(function () {
+            $(".sort-btn").on("click", function () {
+                const table = $("#studentsTable");
+                const rows = table.find("tbody > tr").toArray();
+                const column = $(this).data("column");
+                const order = $(this).data("order");
+
+                rows.sort((a, b) => {
+                    const cellA = $(a).find("td").eq(column).text().trim();
+                    const cellB = $(b).find("td").eq(column).text().trim();
+
+                    if ($.isNumeric(cellA) && $.isNumeric(cellB)) {
+                        return order === "desc" ? cellB - cellA : cellA - cellB;
+                    }
+                    return order === "desc"
+                        ? cellB.localeCompare(cellA)
+                        : cellA.localeCompare(cellB);
+                });
+
+                // Append sorted rows back to the table
+                table.find("tbody").append(rows);
+
+                // Toggle sorting order for the next click
+                $(this).data("order", order === "desc" ? "asc" : "desc");
+                $(this).text(order === "desc" ? "⇧" : "⇩");
+            });
+        });
+    </script>
 
     <script>
         function toggleActionsColumn(show) {

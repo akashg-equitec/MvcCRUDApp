@@ -16,7 +16,7 @@ namespace CrudApp.Repo
 {
     public class DapperCrud
     {
-        public    string conn = ConfigurationManager.ConnectionStrings["connectStr"].ConnectionString;
+        public string conn = ConfigurationManager.ConnectionStrings["connectStr"].ConnectionString;
         StudentModel studObj = new StudentModel();
 
 
@@ -44,9 +44,7 @@ namespace CrudApp.Repo
             }
             catch (Exception ex)
             {
-                // Log the error to a text file
-                ErrorLogger.LogError(ex);
-                throw; // Rethrow the exception to allow the controller to handle it
+                throw (ex);// Rethrow the exception to allow the controller to handle it
             }
         }
 
@@ -78,8 +76,7 @@ namespace CrudApp.Repo
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogError(ex);
-                throw;
+                throw (ex);
             }
         }
 
@@ -105,8 +102,17 @@ namespace CrudApp.Repo
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogError(ex);
-                throw;
+                throw (ex);
+            }
+        }
+
+        // GetDepartments
+        public List<StudentModel> GetDepartments()
+        {
+            using (var connection = new SqlConnection(conn))
+            {
+                string query = "GetDepartments";
+                return connection.Query<StudentModel>(query).ToList();
             }
         }
 
@@ -120,14 +126,13 @@ namespace CrudApp.Repo
                 using (var con = new SqlConnection(conn))
                 {
                     con.Open();
-                    string sql = "delete from Students where StudentId=@StudentId";
+                    string sql = "delete from StudentsBackup where StudentId=@StudentId";
                     con.Execute(sql, new { StudentId });
                 }
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogError(ex);
-                throw;
+                throw (ex);
             }
         }
 
@@ -146,8 +151,7 @@ namespace CrudApp.Repo
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogError(ex);
-                throw;
+                throw (ex);
             }
         }
 
@@ -165,8 +169,7 @@ namespace CrudApp.Repo
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogError(ex);
-                throw;
+                throw (ex);
             }
         }
 
@@ -187,8 +190,7 @@ namespace CrudApp.Repo
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogError(ex);
-                throw;
+                throw (ex);
             }
         }
 
@@ -196,64 +198,72 @@ namespace CrudApp.Repo
         // RESTORED DELETED STUDENTS 
         public void RestoreStudent(int studentId)
         {
-            try
+            try { 
+            using (var con = new SqlConnection(conn))
             {
-                using (var con = new SqlConnection(conn))
-                {
-                    con.Open();
-                    con.Execute("RestoreStudent", new { StudentId = studentId }, commandType: CommandType.StoredProcedure);
-                }
+                con.Open();
+                con.Execute("RestoreStudent", new { StudentId = studentId }, commandType: CommandType.StoredProcedure);
+            }
             }
             catch (Exception ex)
-            {
-                ErrorLogger.LogError(ex);
-                throw;
+            { 
+                throw(ex);
             }
         }
 
 
 
-        //ERROR LOG 
-        public static class ErrorLogger
-            {
-                private static readonly string LogFilePath = @"C:\Users\Equi-PC\Desktop\Akash\Log\ErrorLog.txt";
 
-                public static void LogError(Exception ex)
+        public List<StudentModel> GetSortedStudents(string columnName, string sortOrder, int pageNumber, int pageSize)
+        {
+            using (SqlConnection con = new SqlConnection(conn))
+            {
+                SqlCommand cmd = new SqlCommand("GetSortedStudents", con)
                 {
-                    try
+                    CommandType = CommandType.StoredProcedure
+                };
+
+                cmd.Parameters.AddWithValue("@ColumnName", columnName);
+                cmd.Parameters.AddWithValue("@SortOrder", sortOrder);
+                cmd.Parameters.AddWithValue("@PageNumber", pageNumber);
+                cmd.Parameters.AddWithValue("@PageSize", pageSize);
+
+                con.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+                List<StudentModel> students = new List<StudentModel>();
+
+                while (reader.Read())
+                {
+                    students.Add(new StudentModel
                     {
-
-                        using (StreamWriter writer = new StreamWriter(LogFilePath, true))
-                        {
-                            writer.WriteLine($"Time: {DateTime.Now}");
-                            writer.WriteLine($"Message: {ex.Message}");
-                            writer.WriteLine($"StackTrace: {ex.StackTrace}");
-                            if (ex.InnerException != null)
-                            {
-                                writer.WriteLine($"InnerException: {ex.InnerException.Message}");
-                            }
-                            writer.WriteLine(new string('-', 50));
-                        }
-                    }
-                    catch (Exception loggingEx)
-                        {
-                             Console.WriteLine($"Logging failed: {loggingEx.Message}"); // Handle the logging error
-                        }
+                        StudentId = reader.GetInt32(reader.GetOrdinal("StudentId")),
+                        Name = reader.GetString(reader.GetOrdinal("Name")),
+                        RollNo = reader.GetInt32(reader.GetOrdinal("RollNo")),
+                        Department = reader.GetString(reader.GetOrdinal("Department")),
+                        Gender = reader.GetString(reader.GetOrdinal("Gender")),
+                        Address = reader.GetString(reader.GetOrdinal("Address")),
+                        PhoneNumber = reader.GetString(reader.GetOrdinal("PhoneNumber")),
+                        DateOfBirth = reader.GetDateTime(reader.GetOrdinal("DateOfBirth"))
+                    });
+                }
+                return students;
             }
-            }
-
-         public void RestoreStudent()
-        { 
-            try
-            {
-                throw new Exception("Test Exception");
-            }
-            catch (Exception ex)
-            {
-                DapperCrud.ErrorLogger.LogError(ex);
-            }
-
         }
+
+        public int GetTotalStudentsCount()
+        {
+            using (SqlConnection con = new SqlConnection(conn))
+            {
+                SqlCommand cmd = new SqlCommand("GetTotalStudentsCount", con)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+
+                con.Open();
+                return (int)cmd.ExecuteScalar();
+            }
+        }
+
 
     }
 }

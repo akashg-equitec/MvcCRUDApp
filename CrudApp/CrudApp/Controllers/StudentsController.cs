@@ -1,6 +1,7 @@
 ﻿using CrudApp.Models;
 using CrudApp.Repo;
 using Dapper;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -9,14 +10,19 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
-using static CrudApp.Repo.DapperCrud;
 
 namespace CrudApp.Controllers
 {
     public class StudentsController : Controller
     {
+        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         DapperCrud dapObj = new DapperCrud();
+
+        //public StudentsController()
+        //{
+        //    logger.Debug("NLog is initialized and working.");
+        //}
 
 
 
@@ -29,18 +35,20 @@ namespace CrudApp.Controllers
                 {
                     con.Open();
                     string sql = "SELECT * FROM Departments";
-                    var temp = con.Query<StudentModel>(sql); 
+                    var temp = con.Query<StudentModel>(sql);
                     ViewBag.dept = temp;
                 }
+                logger.Info("Successfully loaded the Create page.");
                 return View();
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogError(ex);
+                logger.Error(ex, "Error loading Create page.");
                 TempData["ErrorMessage"] = $"Error loading Create page: {ex.Message}";
                 return RedirectToAction("Show");
             }
         }
+
 
         // Create (POST)
         [HttpPost]
@@ -60,8 +68,7 @@ namespace CrudApp.Controllers
                 }
                 catch (Exception ex)
                 {
-                    // Log the error to a text file
-                    ErrorLogger.LogError(ex);
+                    logger.Error(ex, "Error loading departments during Create.");
                     TempData["ErrorMessage"] = $"Error loading departments: {ex.Message}";
                 }
                 return View(std);
@@ -70,13 +77,13 @@ namespace CrudApp.Controllers
             try
             {
                 dapObj.InsertStudent(std);
+                logger.Info("Successfully added student with ID {0}.", std.StudentId);
                 TempData["SuccessMessage"] = "Student added successfully!";
                 return RedirectToAction("Show");
             }
             catch (Exception ex)
             {
-                // Log the error to a text file
-                ErrorLogger.LogError(ex);
+                logger.Error(ex, "Error adding student.");
                 TempData["ErrorMessage"] = $"Error adding student: {ex.Message}";
                 return View(std);
             }
@@ -91,6 +98,7 @@ namespace CrudApp.Controllers
         {
             if (!StudentId.HasValue)
             {
+                logger.Warn("StudentId not provided for Update.");
                 TempData["ErrorMessage"] = "StudentId is required.";
                 return RedirectToAction("Show");
             }
@@ -109,19 +117,22 @@ namespace CrudApp.Controllers
 
                     if (student == null)
                     {
+                        logger.Warn("Student with ID {0} not found.", StudentId);
                         TempData["ErrorMessage"] = "Student not found.";
                         return RedirectToAction("Show");
                     }
+                    logger.Info("Loaded Update page for student with ID {0}.", StudentId);
                     return View(student);
                 }
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogError(ex);
+                logger.Error(ex, "Error loading Update page.");
                 TempData["ErrorMessage"] = $"Error loading Update page: {ex.Message}";
                 return RedirectToAction("Show");
             }
         }
+
 
         // Update (POST)
         [HttpPost]
@@ -129,6 +140,7 @@ namespace CrudApp.Controllers
         {
             if (!ModelState.IsValid)
             {
+                logger.Warn("Model state is invalid for updating student.");
                 try
                 {
                     using (var con = new SqlConnection(dapObj.conn))
@@ -141,6 +153,7 @@ namespace CrudApp.Controllers
                 }
                 catch (Exception ex)
                 {
+                    logger.Error(ex, "Error loading departments during Update.");
                     TempData["ErrorMessage"] = $"Error loading departments: {ex.Message}";
                 }
                 return View(model);
@@ -148,23 +161,26 @@ namespace CrudApp.Controllers
 
             try
             {
-                // Ensure DateOfBirth is valid
+                // Validate DateOfBirth
                 if (model.DateOfBirth == null || model.DateOfBirth < new DateTime(1753, 1, 1))
                 {
+                    logger.Error("Invalid DateOfBirth for student with ID {0}.", model.StudentId);
                     throw new ArgumentException("Invalid Date of Birth.");
                 }
 
                 dapObj.updateData(model);
+                logger.Info("Successfully updated student with ID {0}.", model.StudentId);
                 TempData["SuccessMessage"] = "Data updated successfully!";
                 return RedirectToAction("Show");
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogError(ex);
+                logger.Error(ex, "Error updating student.");
                 TempData["ErrorMessage"] = $"Error updating data: {ex.Message}";
                 return View(model);
             }
         }
+
 
 
 
@@ -178,14 +194,16 @@ namespace CrudApp.Controllers
                 var student = dapObj.ViewData(id);
                 if (student == null)
                 {
+                    logger.Warn("Student with ID {0} not found for Details.", id);
                     TempData["ErrorMessage"] = "Student not found.";
                     return RedirectToAction("Show");
                 }
+                logger.Info("Loaded details for student with ID {0}.", id);
                 return View(student);
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogError(ex);
+                logger.Error(ex, "Error loading details for student with ID {0}.", id);
                 TempData["ErrorMessage"] = $"Error loading details: {ex.Message}";
                 return RedirectToAction("Show");
             }
@@ -195,42 +213,83 @@ namespace CrudApp.Controllers
 
 
         // Show (GET)
-        public ActionResult Show(int page = 1)
+        //public ActionResult Show(int page = 1)
+        //{
+        //    try
+        //    {
+        //        int pageSize = 10;
+        //        var students = dapObj.GetActiveStudents();
+        //        ViewBag.CurrentPage = page;
+        //        ViewBag.TotalPages = Math.Ceiling((double)students.Count / pageSize);
+        //        ViewBag.c = ((page - 1) * pageSize) + 1;
+
+        //        logger.Info("Successfully loaded student list for page {0}.", page);
+        //        return View(students.Skip((page - 1) * pageSize).Take(pageSize));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        logger.Error(ex, "Error loading student list for page {0}.", page);
+        //        TempData["ErrorMessage"] = $"Error loading student list: {ex.Message}";
+        //        return RedirectToAction("Show");
+        //    }
+        //}
+
+        public ActionResult Show(int page = 1, string searchQuery = "", string selectedDepartment = "")
         {
             try
             {
                 int pageSize = 10;
+
+                // Fetch all students
                 var students = dapObj.GetActiveStudents();
+
+                // Apply search query filter
+                if (!string.IsNullOrWhiteSpace(searchQuery))
+                {
+                    students = students
+                        .Where(s => s.Name.IndexOf(searchQuery, StringComparison.OrdinalIgnoreCase) >= 0)
+                        .ToList();
+                }
+
+                // Apply department filter
+                if (!string.IsNullOrWhiteSpace(selectedDepartment))
+                {
+                    students = students
+                        .Where(s => s.DepartmentName.Equals(selectedDepartment, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
+
+                // Calculate pagination details
                 ViewBag.CurrentPage = page;
                 ViewBag.TotalPages = Math.Ceiling((double)students.Count / pageSize);
                 ViewBag.c = ((page - 1) * pageSize) + 1;
 
-                return View(students.Skip((page - 1) * pageSize).Take(pageSize));
+                // Pass filtered students for the current page
+                var paginatedStudents = students
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                // Pass department list for dropdown
+                var departments = dapObj.GetDepartments();
+                ViewBag.Dept = departments;
+
+                logger.Info("Successfully loaded student list for page {0} with filters.", page);
+                return View(paginatedStudents);
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogError(ex);
+                logger.Error(ex, "Error loading student list for page {0}.", page);
                 TempData["ErrorMessage"] = $"Error loading student list: {ex.Message}";
-                return RedirectToAction("Error");
+                return RedirectToAction("Show");
             }
         }
 
-        // Permanent Delete (GET)
-        public ActionResult Delete(int id)
-        {
-            try
-            {
-                dapObj.DeletePermData(id);
-                TempData["SuccessMessage"] = "Student deleted successfully.";
-            }
-            catch (Exception ex)
-            {
-                ErrorLogger.LogError(ex);
-                TempData["ErrorMessage"] = $"Error deleting student: {ex.Message}";
-                return RedirectToAction("Error");
-            }
-            return RedirectToAction("DeletedView");
-        }
+
+
+
+
+
 
 
         // Soft Delete (GET)
@@ -239,16 +298,17 @@ namespace CrudApp.Controllers
             try
             {
                 dapObj.SoftDeleteStudent(id);
+                logger.Info("Successfully soft-deleted student with ID {0}.", id);
                 TempData["SuccessMessage"] = "Student soft-deleted successfully.";
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogError(ex);
+                logger.Error(ex, "Error soft-deleting student with ID {0}.", id);
                 TempData["ErrorMessage"] = $"Error soft-deleting student: {ex.Message}";
-                return RedirectToAction("Error");
             }
             return RedirectToAction("Show");
         }
+
 
         // Deleted View (GET)
         public ActionResult DeletedView(int page = 1)
@@ -261,15 +321,17 @@ namespace CrudApp.Controllers
                 ViewBag.TotalPages = Math.Ceiling((double)students.Count / pageSize);
                 ViewBag.c = ((page - 1) * pageSize) + 1;
 
+                logger.Info("Successfully loaded deleted student list for page {0}.", page);
                 return View(students.Skip((page - 1) * pageSize).Take(pageSize));
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogError(ex);
+                logger.Error(ex, "Error loading deleted student list for page {0}.", page);
                 TempData["ErrorMessage"] = $"Error loading deleted students: {ex.Message}";
-                return RedirectToAction("Error");
+                return RedirectToAction("Show");
             }
         }
+
 
         // Restore (GET)
         public ActionResult Restore(int id)
@@ -277,16 +339,17 @@ namespace CrudApp.Controllers
             try
             {
                 dapObj.RestoreStudent(id);
+                logger.Info("Successfully restored student with ID {0}.", id);
                 TempData["SuccessMessage"] = "Student restored successfully.";
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogError(ex);
+                logger.Error(ex, "Error restoring student with ID {0}.", id);
                 TempData["ErrorMessage"] = $"Error restoring student: {ex.Message}";
-                return RedirectToAction("Error");
             }
             return RedirectToAction("DeletedView");
         }
+
 
     }
 }

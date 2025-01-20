@@ -22,7 +22,7 @@ namespace CrudApp.Models
 
 
 
-        [Required(ErrorMessage = "Department is required")]
+        [Required(ErrorMessage = "Department is required")] 
         public int DepartmentId { get; set; }  // Foreign key for Department
 
 
